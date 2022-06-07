@@ -1,11 +1,47 @@
-import React, { useContext } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import PlanetsContext from '../context/PlanetsContext';
 
 function Table() {
-  const { data } = useContext(PlanetsContext);
+  const { data, filteredData, setFilteredData } = useContext(PlanetsContext);
+  const [filter, setFilter] = useState({
+    filterByName: {
+      name: '',
+    },
+  });
+
+  const { filterByName: { name } } = filter;
+
+  const handleChange = ({ target }) => {
+    setFilter({
+      ...filter,
+      filterByName: {
+        name: target.value.toLowerCase(),
+      },
+    });
+  };
+
+  useEffect(() => {
+    const filteredPlanets = data.filter((planet) => (
+      planet.name.toLowerCase().includes(name)));
+
+    setFilteredData([...filteredPlanets]);
+  }, [name]);
 
   return (
     <section>
+      <form>
+        <label htmlFor="planet-name">
+          <input
+            data-testid="name-filter"
+            id="planet-name"
+            type="text"
+            placeholder="Nome do planeta..."
+            value={ name }
+            onChange={ handleChange }
+          />
+        </label>
+      </form>
+
       <table>
         <thead>
           <tr>
@@ -27,7 +63,7 @@ function Table() {
 
         <tbody>
           {
-            data.map((planet) => (
+            filteredData.map((planet) => (
               <tr key={ planet.name }>
                 <td>{planet.name}</td>
                 <td>{planet.rotation_period}</td>
