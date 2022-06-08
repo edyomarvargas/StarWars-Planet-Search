@@ -3,13 +3,17 @@ import PlanetsContext from '../context/PlanetsContext';
 
 function Table() {
   const { data, filteredData, setFilteredData } = useContext(PlanetsContext);
+  const [column, setColumn] = useState('population');
+  const [comparison, setComparison] = useState('maior que');
+  const [value, setValue] = useState(0);
   const [filter, setFilter] = useState({
     filterByName: {
       name: '',
     },
+    filterByNumericValues: [],
   });
 
-  const { filterByName: { name } } = filter;
+  const { filterByNumericValues, filterByName: { name } } = filter;
 
   const handleChange = ({ target }) => {
     setFilter({
@@ -24,8 +28,42 @@ function Table() {
     const filteredPlanets = data.filter((planet) => (
       planet.name.toLowerCase().includes(name)));
 
-    setFilteredData([...filteredPlanets]);
-  }, [name]);
+    /*
+    A lógica abaixo para implementar os filtros acumulados foi baseada na monitoria do
+    dia 07/06/22, que pode ser acessada no seguinte link:
+    https://trybecourse.slack.com/archives/C02T5FNGN07/p1654616455215879
+    */
+    const resultArray = filterByNumericValues.reduce((acc, filterType) => (
+      acc.filter((planet) => {
+        switch (filterType.comparison) {
+        case 'maior que':
+          return Number(planet[filterType.column]) > Number(filterType.value);
+        case 'menor que':
+          return Number(planet[filterType.column]) < Number(filterType.value);
+        case 'igual a':
+          return Number(planet[filterType.column]) === Number(filterType.value);
+        default:
+          return true;
+        }
+      })
+    ), filteredPlanets);
+
+    setFilteredData(resultArray);
+  }, [name, filterByNumericValues]);
+
+  const applyFilters = () => {
+    setFilter({
+      ...filter,
+      filterByNumericValues: [
+        ...filterByNumericValues,
+        {
+          column,
+          comparison,
+          value,
+        },
+      ],
+    });
+  };
 
   return (
     <section>
@@ -40,7 +78,54 @@ function Table() {
             onChange={ handleChange }
           />
         </label>
+
+        <select
+          data-testid="column-filter"
+          onChange={ ({ target }) => setColumn(target.value) }
+        >
+          <option>population</option>
+          <option>orbital_period</option>
+          <option>diameter</option>
+          <option>rotation_period</option>
+          <option>surface_water</option>
+        </select>
+
+        <select
+          data-testid="comparison-filter"
+          onChange={ ({ target }) => setComparison(target.value) }
+        >
+          <option>maior que</option>
+          <option>menor que</option>
+          <option>igual a</option>
+        </select>
+
+        <input
+          data-testid="value-filter"
+          type="number"
+          value={ value }
+          onChange={ ({ target }) => setValue(Number(target.value)) }
+        />
+
+        <button
+          type="button"
+          data-testid="button-filter"
+          onClick={ applyFilters }
+        >
+          Filtrar
+        </button>
       </form>
+
+      <div>
+        {
+          filterByNumericValues.map((filterType, index) => (
+            <p
+              key={ index + 1 }
+            >
+              {`${filterType.column} ${filterType.comparison} ${filterType.value}`}
+            </p>
+          ))
+        }
+      </div>
 
       <table>
         <thead>
