@@ -12,6 +12,7 @@ function Table() {
     },
     filterByNumericValues: [],
   });
+  const [isDisabled, setIsDisabled] = useState(true);
 
   const { filterByNumericValues, filterByName: { name } } = filter;
 
@@ -49,6 +50,10 @@ function Table() {
     ), filteredPlanets);
 
     setFilteredData(resultArray);
+
+    if (filterByNumericValues.length > 0) {
+      setIsDisabled(false);
+    }
   }, [name, filterByNumericValues]);
 
   const applyFilters = () => {
@@ -65,6 +70,23 @@ function Table() {
     });
   };
 
+  const deleteFilter = (index) => {
+    const newArray = filterByNumericValues.filter(
+      ((_filterType, filterIndex) => index !== filterIndex),
+    );
+
+    setFilter({
+      ...filter,
+      filterByNumericValues: newArray,
+    });
+  };
+
+  const removeAllFilters = () => {
+    setFilter({
+      ...filter,
+      filterByNumericValues: [],
+    });
+  };
   return (
     <section>
       <form>
@@ -117,12 +139,30 @@ function Table() {
 
       <div>
         {
+          <button
+            data-testid="button-remove-filters"
+            type="button"
+            disabled={ isDisabled }
+            onClick={ removeAllFilters }
+          >
+            Remover todos os filtros
+          </button>
+        }
+        {
           filterByNumericValues.map((filterType, index) => (
-            <p
-              key={ index + 1 }
-            >
-              {`${filterType.column} ${filterType.comparison} ${filterType.value}`}
-            </p>
+            <div key={ index }>
+              <p data-testid="filter">
+                {`${filterType.column} ${filterType.comparison} ${filterType.value}`}
+
+                <button
+                  type="button"
+                  id={ index }
+                  onClick={ () => deleteFilter(index) }
+                >
+                  Remover filtro
+                </button>
+              </p>
+            </div>
           ))
         }
       </div>
