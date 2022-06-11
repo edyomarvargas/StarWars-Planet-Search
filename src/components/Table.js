@@ -4,6 +4,9 @@ import PlanetsContext from '../context/PlanetsContext';
 function Table() {
   const { data, filteredData, setFilteredData } = useContext(PlanetsContext);
   const [column, setColumn] = useState('population');
+  const [columnOptions, setColumnOptions] = useState([
+    'population', 'orbital_period', 'diameter', 'rotation_period', 'surface_water',
+  ]);
   const [comparison, setComparison] = useState('maior que');
   const [value, setValue] = useState(0);
   const [filter, setFilter] = useState({
@@ -14,6 +17,9 @@ function Table() {
   });
   const [isDisabled, setIsDisabled] = useState(true);
 
+  const INITIAL_COLUMN_OPTIONS = [
+    'population', 'orbital_period', 'diameter', 'rotation_period', 'surface_water',
+  ];
   const { filterByNumericValues, filterByName: { name } } = filter;
 
   const handleChange = ({ target }) => {
@@ -68,12 +74,31 @@ function Table() {
         },
       ],
     });
+
+    const filteredColumnOptions = columnOptions.filter((option) => option !== column);
+    setColumnOptions([...filteredColumnOptions]);
   };
+
+  useEffect(() => {
+    setColumn(columnOptions[0]);
+  }, [columnOptions]);
 
   const deleteFilter = (index) => {
     const newArray = filterByNumericValues.filter(
       ((_filterType, filterIndex) => index !== filterIndex),
     );
+
+    const arrayOfColumns = [];
+    newArray.map((array) => arrayOfColumns.push(array.column));
+
+    // Consultei o seguinte link para filtrar 2 arrays:
+    // https://stackoverflow.com/questions/30389599/comparing-and-filtering-two-arrays
+    const INDEX_REFERENCE = -1;
+    const columnOptionsFiltered = INITIAL_COLUMN_OPTIONS.filter((columnOption) => (
+      arrayOfColumns.indexOf(columnOption) === INDEX_REFERENCE
+    ));
+
+    setColumnOptions(columnOptionsFiltered);
 
     setFilter({
       ...filter,
@@ -86,6 +111,7 @@ function Table() {
       ...filter,
       filterByNumericValues: [],
     });
+    setColumnOptions([INITIAL_COLUMN_OPTIONS]);
   };
   return (
     <section>
@@ -105,11 +131,9 @@ function Table() {
           data-testid="column-filter"
           onChange={ ({ target }) => setColumn(target.value) }
         >
-          <option>population</option>
-          <option>orbital_period</option>
-          <option>diameter</option>
-          <option>rotation_period</option>
-          <option>surface_water</option>
+          {
+            columnOptions.map((option, index) => <option key={ index }>{option}</option>)
+          }
         </select>
 
         <select
